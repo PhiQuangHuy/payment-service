@@ -8,7 +8,7 @@ import { PaymentService } from 'src/payment/services/payment.service';
 import { KafkaProducerService } from 'src/kafka/kafka-producer.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment])], // ✅ Required for OrderRepository
+  imports: [TypeOrmModule.forFeature([Payment])],
   providers: [PaymentService, PaymentRepository, KafkaProducerService],
   exports: [PaymentService, KafkaProducerService, TypeOrmModule],
 })
