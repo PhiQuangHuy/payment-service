@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { GlobalFilter } from './common/filters/global-filter.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,8 +14,12 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useGlobalFilters(new GlobalFilter());
 
-  await app.listen(3002);
-  console.log('Payment microservice is running on port 3002');
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('PORT') || 3002;
+
+  await app.listen(port);
+  console.log(`Payment microservice is running on port ${port}`);
 }
 bootstrap();
