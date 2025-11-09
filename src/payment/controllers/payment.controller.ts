@@ -14,7 +14,8 @@ import { CreatePaymentDto } from '../dtos/create-payment.dto';
 import { UpdatePaymentDto } from '../dtos/update-payment.dto';
 import { ProcessPaymentDto } from '../dtos/process-payment.dto';
 import { PaymentResponseDto } from '../dtos/payment-response.dto';
-import { PaymentStatus } from '../entities/payment.entity';
+import { GetPaymentDto } from '../dtos/get-payment.dto'
+import { Paginated } from 'src/common/pagination/interfaces/paginated.interface';
 
 @Controller('payments')
 export class PaymentController {
@@ -48,23 +49,9 @@ export class PaymentController {
 
   @Get()
   async getAllPayments(
-    @Query('status') status?: PaymentStatus,
-    @Query('customerId') customerId?: string,
-    @Query('orderId') orderId?: string,
-  ): Promise<PaymentResponseDto[]> {
-    if (status) {
-      return await this.paymentService.getPaymentsByStatus(status);
-    }
-
-    if (customerId) {
-      return await this.paymentService.getPaymentsByCustomerId(customerId);
-    }
-
-    if (orderId) {
-      return await this.paymentService.getPaymentsByOrderId(orderId);
-    }
-
-    return await this.paymentService.getAllPayments();
+    @Query() getPaymentDto: GetPaymentDto
+  ): Promise<Paginated<PaymentResponseDto>> {
+    return await this.paymentService.getAllPayments(getPaymentDto);
   }
 
   @Get(':id')

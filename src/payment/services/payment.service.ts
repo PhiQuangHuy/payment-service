@@ -15,12 +15,16 @@ import {
   PaymentMethod,
 } from '../entities/payment.entity';
 import { KafkaProducerService } from '../../kafka/kafka-producer.service';
+import { PaginationProvider } from 'src/common/pagination/providers/pagination.provider';
+import { GetPaymentDto } from '../dtos/get-payment.dto';
+import { Paginated } from 'src/common/pagination/interfaces/paginated.interface';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly kafkaProducer: KafkaProducerService,
+    private readonly paginationProvider: PaginationProvider,
   ) {}
 
   async createPayment(
@@ -142,9 +146,34 @@ export class PaymentService {
     }
   }
 
-  async getAllPayments(): Promise<PaymentResponseDto[]> {
-    const payments = await this.paymentRepository.findAll();
-    return payments.map((payment) => this.mapToResponseDto(payment));
+
+  async getAllPayments(
+    getPaymentDto: GetPaymentDto,
+  ): Promise<Paginated<PaymentResponseDto>> {
+    const { limit = 10, page = 1, status, customerId, orderId } = getPaymentDto;
+    const qb = this.paymentRepository.repository.createQueryBuilder('payment');
+
+    if (status !== undefined) {
+      qb.andWhere('payment.status = :status', { status });
+    }
+    if (customerId !== undefined && customerId !== '') {
+      qb.andWhere('payment.customerId = :customerId', { customerId });
+    }
+    if (orderId !== undefined && orderId !== '') {
+      qb.andWhere('payment.orderId = :orderId', { orderId });
+    }
+
+    qb.orderBy('payment.createdAt', 'DESC');
+
+    const paginated = await this.paginationProvider.paginateQuery(
+      { limit, page },
+      qb,
+    );
+
+    return {
+      data: paginated.data.map((p) => this.mapToResponseDto(p)),
+      meta: paginated.meta,
+    };
   }
 
   async getPaymentById(id: string): Promise<PaymentResponseDto> {
@@ -153,25 +182,6 @@ export class PaymentService {
       throw new NotFoundException(`Payment with ID ${id} not found`);
     }
     return this.mapToResponseDto(payment);
-  }
-
-  async getPaymentsByOrderId(orderId: string): Promise<PaymentResponseDto[]> {
-    const payments = await this.paymentRepository.findByOrderId(orderId);
-    return payments.map((payment) => this.mapToResponseDto(payment));
-  }
-
-  async getPaymentsByCustomerId(
-    customerId: string,
-  ): Promise<PaymentResponseDto[]> {
-    const payments = await this.paymentRepository.findByCustomerId(customerId);
-    return payments.map((payment) => this.mapToResponseDto(payment));
-  }
-
-  async getPaymentsByStatus(
-    status: PaymentStatus,
-  ): Promise<PaymentResponseDto[]> {
-    const payments = await this.paymentRepository.findByStatus(status);
-    return payments.map((payment) => this.mapToResponseDto(payment));
   }
 
   async updatePayment(

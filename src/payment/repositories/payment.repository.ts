@@ -12,6 +12,10 @@ export class PaymentRepository {
     private readonly paymentRepository: Repository<Payment>,
   ) {}
 
+  public get repository(): Repository<Payment> {
+    return this.paymentRepository;
+  }
+
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
     const payment = this.paymentRepository.create({
       ...createPaymentDto,
