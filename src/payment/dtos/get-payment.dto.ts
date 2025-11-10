@@ -3,7 +3,7 @@ import { PaginationQueryDto } from 'src/common/pagination/dtos/pagination-query.
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaymentStatus } from '../entities/payment.entity';
 
-class GetPaymentQueryFto {
+class GetPaymentQueryDto {
   @IsEnum(PaymentStatus)
   @IsOptional()
   status?: PaymentStatus;
@@ -18,6 +18,6 @@ class GetPaymentQueryFto {
 }
 
 export class GetPaymentDto extends IntersectionType(
-  GetPaymentQueryFto,
+  GetPaymentQueryDto,
   PaginationQueryDto,
 ) {}
